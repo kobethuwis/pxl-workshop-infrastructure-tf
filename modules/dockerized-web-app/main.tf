@@ -86,10 +86,6 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
           hostPort      = var.container_ports[0]
         }
       ]
-      healthCheck = {
-        command = ["CMD-SHELL", "curl -f http://localhost:${var.container_ports[0]}/health || exit 1"]
-        timeout = 10
-      }
 
       logConfiguration = {
         logDriver = "awslogs"
