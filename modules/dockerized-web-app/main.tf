@@ -40,7 +40,7 @@ resource "aws_vpc_security_group_ingress_rule" "lb_security_group_ingress_rule" 
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
-  description       = "HTTPS traffic"
+  description       = "HTTPS Client traffic"
   cidr_ipv4         = each.value
 }
 
@@ -86,13 +86,18 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
           hostPort      = var.container_ports[0]
         }
       ]
+      healthCheck = {
+        command  =  ["CMD-SHELL", var.health_check_command]
+        startPeriod = 30
+        }
 
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-create-group" = "true"
-          "awslogs-group"        = var.full_name
-          "awslogs-region"       = var.region
+          "awslogs-create-group"  = "true"
+          "awslogs-group"         = var.full_name
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "aws-logs-${var.full_name}"
         }
       }
     }
@@ -113,23 +118,24 @@ resource "aws_iam_role" "iam_role" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "iam_role_policy_attachment" {
+  role       = aws_iam_role.iam_role.name
+  policy_arn = aws_iam_policy.iam_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_managed_policy_attachment" {
+  role       = aws_iam_role.iam_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
 resource "aws_iam_policy" "iam_policy" {
   name   = "${var.full_name}-ecs-iam-policy"
   policy = data.aws_iam_policy_document.iam_policy_document.json
 }
 
-resource "aws_iam_role_policy_attachments_exclusive" "iam_role_policy_attachment_exclusive" {
-  role_name   = aws_iam_role.iam_role.name
-  policy_arns = [aws_iam_policy.iam_policy.arn, "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"]
-
-  depends_on = [aws_iam_role.iam_role, aws_iam_policy.iam_policy]
-}
-
 resource "aws_iam_instance_profile" "iam_instance_profile" {
   name = "${var.full_name}-ecs-instance-profile"
   role = aws_iam_role.iam_role.name
-
-  depends_on = [aws_iam_role.iam_role]
 }
 
 resource "aws_launch_template" "launch_template" {
@@ -158,8 +164,8 @@ resource "aws_launch_template" "launch_template" {
 
 resource "aws_autoscaling_group" "autoscaling_group" {
   desired_capacity      = 0
-  max_size              = 2
-  min_size              = 1
+  max_size              = 4
+  min_size              = 2
   vpc_zone_identifier   = var.app_subnet_ids
   protect_from_scale_in = true
 
@@ -185,12 +191,10 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   lifecycle {
     ignore_changes = [
       desired_capacity,
-      tag
+      tag,
+      mixed_instances_policy
     ]
   }
-
-  depends_on = [aws_ecs_cluster.ecs_cluster]
-
 }
 
 resource "aws_lb_target_group" "lb_target_group" {
@@ -200,6 +204,7 @@ resource "aws_lb_target_group" "lb_target_group" {
   vpc_id   = var.vpc_id
 
   health_check {
+    path     = "/"
     port     = tonumber(var.container_ports[0])
     matcher  = "200,404"
     protocol = "HTTP"

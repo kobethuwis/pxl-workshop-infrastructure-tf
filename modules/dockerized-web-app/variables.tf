@@ -45,3 +45,8 @@ variable "ecr_repository_name" {
 variable "docker_image_tag" {
   description = "Tag of the Docker image"
 }
+
+variable "health_check_command" {
+  description = "Command to use for health checks"
+  default     = "python3 -c 'import sys, requests; sys.exit(0 if requests.get(\"http://localhost:5000/health\").ok else 1)'"
+}
