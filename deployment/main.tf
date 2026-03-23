@@ -18,18 +18,18 @@ locals {
   cidr_blocks         = ["10.0.1.0/24", "10.0.2.0/24", "10.0.8.0/24", "10.0.9.0/24"]
 }
 
-# module "dockerized-web-app" {
-#   source              = "../modules/dockerized-web-app"
-#   region              = local.region
-#   ec2_key_name        = local.ec2_key_pair_name
-#   ssl_certificate_arn = local.acm_certificate_arn
-#   app_subnet_ids      = local.private_subnet_ids
-#   lb_subnet_ids       = local.public_subnet_ids
-#   vpc_id              = local.vpc_id
-#   logs_bucket_id      = local.logs_bucket_id
-#   cidr_blocks         = local.cidr_blocks
-#   container_ports     = [5000]
-#   ecr_repository_name = "pxl-workshop-computer-vision-web-app"
-#   full_name           = "${local.full_name}-web-app"
-#   docker_image_tag    = local.full_name
-# }
+module "dockerized-web-app" {
+  source              = "../modules/dockerized-web-app"
+  region              = local.region
+  ec2_key_name        = local.ec2_key_pair_name
+  ssl_certificate_arn = local.acm_certificate_arn
+  app_subnet_ids      = local.private_subnet_ids
+  lb_subnet_ids       = local.public_subnet_ids
+  vpc_id              = local.vpc_id
+  logs_bucket_id      = local.logs_bucket_id
+  cidr_blocks         = local.cidr_blocks
+  container_ports     = [5000]
+  ecr_repository_name = "pxl-workshop-computer-vision-web-app"
+  full_name           = "${local.full_name}-web-app"
+  docker_image_tag    = local.full_name
+}
