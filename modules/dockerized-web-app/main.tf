@@ -34,13 +34,19 @@
 # resource "aws_iam_policy" "iam_policy" {
 # }
 
-# resource "aws_iam_role_policy_attachments_exclusive" "iam_role_policy_attachment_exclusive" {
+# resource "aws_iam_role_policy_attachment" "iam_role_policy_attachment" {
+# }
+
+# resource "aws_iam_role_policy_attachment" "iam_role_policy_attachment" {
 # }
 
 # resource "aws_iam_instance_profile" "iam_instance_profile" {
 # }
 
 # resource "aws_launch_template" "launch_template" {
+# }
+
+# resource "aws_ecs_cluster" "ecs_cluster" {
 # }
 
 ######################################################################
@@ -53,9 +59,6 @@
 # }
 
 # resource "aws_autoscaling_attachment" "lb_target_group_attachment" {
-# }
-
-# resource "aws_ecs_cluster" "ecs_cluster" {
 # }
 
 # resource "aws_ecs_capacity_provider" "ecs_capacity_provider" {
